@@ -10,25 +10,27 @@ export default function LoginPage() {
   const router = useRouter();
 
   function handleFakeValidate(email, password) {
-    // validación visual local
-    return email === "user@example.com" && password === "password123";
-  }
+  if(email === "admin@example.com" && password === "admin123") return "admin";
+  if(email === "user@example.com" && password === "password123") return "repartidor";
+  return null;
+}
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    if (!email || !password) {
-      setError("Completa email y contraseña");
-      return;
-    }
-    if (!handleFakeValidate(email, password)) {
-      setError("Credenciales inválidas — prueba user@example.com / password123");
-      return;
-    }
-    // simula sesión (solo visual)
-    localStorage.setItem("auth", JSON.stringify({ id: 1, email }));
-    router.replace("/dashboard");
+function handleSubmit(e) {
+  e.preventDefault();
+  setError("");
+  if (!email || !password) {
+    setError("Completa email y contraseña");
+    return;
   }
+  const role = handleFakeValidate(email, password);
+  if (!role) {
+    setError("Credenciales inválidas");
+    return;
+  }
+  localStorage.setItem("auth", JSON.stringify({ id: 1, email, role }));
+  if(role === "admin") router.replace("/admin");
+  else router.replace("/dashboard");
+}
 
 
 const handleRegisterClick = () => {
