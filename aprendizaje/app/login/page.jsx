@@ -9,49 +9,81 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  function handleFakeValidate(email, password) {
-  if(email === "admin@example.com" && password === "admin123") return "admin";
-  if(email === "user@example.com" && password === "password123") return "repartidor";
-  return null;
-}
+  // 🔥 Nueva función: login real al backend
+  async function loginToBackend(email, password) {
+    const res = await fetch("http://localhost:4000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-function handleSubmit(e) {
-  e.preventDefault();
-  setError("");
-  if (!email || !password) {
-    setError("Completa email y contraseña");
-    return;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.msg || "Error al iniciar sesión");
+    }
+
+    return data; // { token, user }
   }
-  const role = handleFakeValidate(email, password);
-  if (!role) {
-    setError("Credenciales inválidas");
-    return;
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    if (!email || !password) {
+      setError("Completa email y contraseña");
+      return;
+    }
+
+    try {
+      // 👇 Llamamos al backend real
+      const { token, user } = await loginToBackend(email, password);
+
+      // Guardamos la sesión en localStorage (igual que antes)
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({
+          id: user._id,
+          email: user.email,
+          role: user.role,
+          token: token,
+        })
+      );
+
+      // Redirección según rol
+      if (user.role === "admin") router.replace("/admin");
+      else router.replace("/dashboard");
+
+    } catch (err) {
+      setError(err.message);
+    }
   }
-  localStorage.setItem("auth", JSON.stringify({ id: 1, email, role }));
-  if(role === "admin") router.replace("/admin");
-  else router.replace("/dashboard");
-}
 
-
-const handleRegisterClick = () => {
+  const handleRegisterClick = () => {
     router.push("/register");
-  } ;
+  };
 
   const handleRecuperarClick = () => {
     router.push("/recuperar");
-  } 
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-6">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         <header className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Acceso visual</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Iniciar sesión
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Acceso visual
+          </p>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               Email
             </label>
             <input
@@ -67,7 +99,10 @@ const handleRegisterClick = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               Contraseña
             </label>
             <input
@@ -82,7 +117,9 @@ const handleRegisterClick = () => {
             />
           </div>
 
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
@@ -96,7 +133,6 @@ const handleRegisterClick = () => {
               <button
                 type="button"
                 onClick={() => {
-                  // ayuda visual: rellenar credenciales de ejemplo
                   setEmail("user@example.com");
                   setPassword("password123");
                   setError("");
@@ -117,10 +153,10 @@ const handleRegisterClick = () => {
           </div>
         </form>
 
-        {/* Sección separada para registro */}
         <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-            ¿No tienes cuenta? Crea una para gestionar tu perfil y acceder al dashboard.
+            ¿No tienes cuenta? Crea una para gestionar tu perfil y acceder al
+            dashboard.
           </p>
           <button
             type="button"
@@ -134,4 +170,3 @@ const handleRegisterClick = () => {
     </div>
   );
 }
-// ...existing code...

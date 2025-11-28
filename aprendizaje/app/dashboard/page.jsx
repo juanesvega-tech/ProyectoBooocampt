@@ -24,6 +24,8 @@ export default function DashboardPage() {
           <div key={order.id} className="p-4 bg-white dark:bg-gray-800 rounded-md shadow">
             <h2 className="font-semibold">{order.cliente}</h2>
             <p>Estado: {order.estado}</p>
+            {order.origenAddress && <p>Origen: {order.origenAddress}</p>}
+            {order.destinoAddress && <p>Destino: {order.destinoAddress}</p>}
             <MapRoute origen={order.origen} destino={order.destino} />
           </div>
         ))}

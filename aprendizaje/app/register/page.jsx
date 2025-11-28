@@ -1,4 +1,3 @@
-// ...existing code...
 "use client";
 
 import { useState } from "react";
@@ -19,6 +18,23 @@ export default function RegisterPage() {
 
   function resetErrors() {
     setError("");
+  }
+
+  // 🔥 Función para llamar al backend
+  async function registerUser(name, email, password) {
+    const res = await fetch("http://localhost:4000/api/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.msg || "Error al registrar usuario");
+    }
+
+    return data; // { token, user }
   }
 
   async function handleSubmit(e) {
@@ -44,40 +60,42 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // simulación visual de registro (sin llamadas a servidor)
-    setTimeout(() => {
-      try {
-        const raw = localStorage.getItem("users");
-        const users = raw ? JSON.parse(raw) : [];
+    try {
+      // 🔥 Registro real
+      const { token, user } = await registerUser(name.trim(), email, password);
 
-        // evitar duplicados por email
-        if (users.some((u) => u.email === email)) {
-          setError("Ya existe una cuenta con ese email");
-          setLoading(false);
-          return;
-        }
+      // Guardamos auth en localStorage
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          token: token,
+        })
+      );
 
-        const user = { id: Date.now(), name: name.trim(), email };
-        users.push(user);
-        localStorage.setItem("users", JSON.stringify(users));
+      // Redirigir al dashboard según rol
+      if (user.role === "admin") router.replace("/admin");
+      else router.replace("/dashboard");
 
-        // simular login guardando auth y redirigir al dashboard
-        localStorage.setItem("auth", JSON.stringify({ id: user.id, email: user.email, name: user.name }));
-
-        router.replace("/dashboard");
-      } catch {
-        setError("Error guardando usuario");
-        setLoading(false);
-      }
-    }, 900);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-6">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         <header className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Crear cuenta</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Registro visual — sin servidor</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Crear cuenta
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Registro seguro — con backend real
+          </p>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -158,10 +176,7 @@ export default function RegisterPage() {
             </button>
           </div>
         </form>
-
-        
       </div>
     </div>
   );
 }
-// ...existing code...
