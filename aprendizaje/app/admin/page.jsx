@@ -1,76 +1,179 @@
 "use client";
 import { useState, useEffect } from "react";
 import * as ordersAPI from "../api/orders";
+import { Package, User, Clock, CheckCircle, Truck, ChevronRight } from "lucide-react";
+import StatusBadge from "../ui/StatusBadge";
+import Modal from "../ui/Modal";
+import AssignForm from "../ui/AssignForm";
 
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     setOrders([...ordersAPI.getOrders()]);
   }, []);
 
-  function handleAssign(orderId) {
-    ordersAPI.assignOrder(orderId, "repartidor1");
-    setOrders([...ordersAPI.getOrders()]);
+  function openAssignModal(order) {
+    setSelectedOrder(order);
+    setModalOpen(true);
   }
 
-  function getStatusColor(status) {
-    switch (status) {
-      case "Pendiente":
-        return "bg-yellow-100 text-yellow-700";
-      case "En camino":
-        return "bg-blue-100 text-blue-700";
-      case "Entregado":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
+  function handleAssign(repartidor, lugarEntrega) {
+    ordersAPI.assignOrder(selectedOrder.id, repartidor, lugarEntrega);
+
+    setOrders([...ordersAPI.getOrders()]);
+    setModalOpen(false);
   }
+
+  function handleLogout() {
+  // EJEMPLO: limpiar datos de sesión
+  localStorage.removeItem("token");
+
+  // Redirigir al login (si usas Next.js router)
+  window.location.href = "/login";
+}
+
+  // El badge de estado se obtiene desde `app/ui/StatusBadge` (reutilizable)
+
+  const pendingCount = orders.filter(o => o.estado === "Pendiente").length;
+  const inTransitCount = orders.filter(o => o.estado === "En camino").length;
+  const deliveredCount = orders.filter(o => o.estado === "Entregado").length;
 
   return (
-    <div className="min-h-screen px-6 py-10 bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
-          Gestión de pedidos
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-950 dark:via-gray-900 dark:to-gray-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Header */}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 bg-indigo-600 rounded-xl">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-gray-900 dark:text-white">
+                Gestión de pedidos
+              </h1>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 ml-14">
+              Administra y asigna pedidos a repartidores
+            </p>
+          </div>
 
-        <div className="space-y-4">
-          {orders.map(order => (
-            <div
-              key={order.id}
-              className="p-6 bg-white dark:bg-gray-800 border border-gray-200
-                         dark:border-gray-700 rounded-xl shadow-sm
-                         hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Cliente: {order.cliente}
-                  </p>
+          {/* BOTÓN DE CERRAR SESIÓN */}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-xl text-sm font-medium 
+               bg-red-600 hover:bg-red-700 active:bg-red-800 
+               text-white shadow-sm hover:shadow transition-all"
+          >
+            Cerrar sesión
+          </button>
+        </div>
 
-                  <span
-                    className={`inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(order.estado)}`}
-                  >
-                    {order.estado}
-                  </span>
-                </div>
-
-                {order.estado === "Pendiente" && (
-                  <button
-                    onClick={() => handleAssign(order.id)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 
-                               text-white rounded-lg shadow 
-                               transition-all duration-200"
-                  >
-                    Asignar a repartidor
-                  </button>
-                )}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Pendientes</p>
+                <p className="text-gray-900 dark:text-white">{pendingCount}</p>
+              </div>
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">En camino</p>
+                <p className="text-gray-900 dark:text-white">{inTransitCount}</p>
+              </div>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Entregados</p>
+                <p className="text-gray-900 dark:text-white">{deliveredCount}</p>
+              </div>
+              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Orders List */}
+        <div className="space-y-3">
+          {orders.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
+              <Package className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">No hay pedidos disponibles</p>
+            </div>
+          ) : (
+            orders.map(order => (
+              <div
+                key={order.id}
+                className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
+                           rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900 
+                           transition-all duration-200"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                          <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400">Cliente</p>
+                          <p className="text-gray-900 dark:text-white">{order.cliente}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={order.estado} />
+                        {order.repartidor && (
+                          <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <Truck className="w-4 h-4" />
+                            {order.repartidor}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {order.estado === "Pendiente" && (
+                      <button
+                        onClick={() => openAssignModal(order)}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 
+                                   bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                                   text-white rounded-xl shadow-sm hover:shadow 
+                                   transition-all duration-200 group/btn"
+                      >
+                        <span>Asignar a repartidor</span>
+                        <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {/* Modal */}
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Asignar pedido">
+          {selectedOrder && (
+            <AssignForm order={selectedOrder} onSubmit={handleAssign} />
+          )}
+        </Modal>
       </div>
     </div>
   );
 }
-
