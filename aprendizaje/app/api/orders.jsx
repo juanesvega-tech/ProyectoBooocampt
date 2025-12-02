@@ -1,44 +1,31 @@
 // app/api/orders.js
-let orders = [
-  {
-    id: 1,
-    cliente: "Juan Pérez",
-    origen: { lat: -34.6037, lng: -58.3816 },
-    destino: { lat: -34.6090, lng: -58.3840 },
-    origenAddress: "C. Florida 100, CABA",
-    destinoAddress: "Av. Corrientes 200, CABA",
-    estado: "Pendiente",
-    repartidor: null
-  },
-  {
-    id: 2,
-    cliente: "María López",
-    origen: { lat: -34.6070, lng: -58.3820 },
-    destino: { lat: -34.6100, lng: -58.3850 },
-    origenAddress: "Lavalle 50, CABA",
-    destinoAddress: "Tucumán 300, CABA",
-    estado: "Pendiente",
-    repartidor: null
-  },
-  {
-    id: 3,
-    cliente: "Carlos Gómez",
-    origen: { lat: -34.6045, lng: -58.3800 },
-    destino: { lat: -34.6110, lng: -58.3865 },
-    origenAddress: "Alsina 120, CABA",
-    destinoAddress: "Pueyrredón 400, CABA",
-    estado: "En camino",
-    repartidor: "repartidor1"
-  }
-];
+let orders = [];
 
 export function getOrders() {
   return orders;
 }
 
-export function assignOrder(orderId, repartidor) {
+export function assignOrder(orderId, repartidor, lugarEntrega) {
   orders = orders.map(o =>
-    o.id === orderId ? { ...o, estado: "En camino", repartidor } : o
+    o.id === orderId ? { ...o, estado: "En camino", repartidor, lugarEntrega } : o
   );
   return orders.find(o => o.id === orderId);
+}
+
+export function createOrder(cliente, origenAddress, destinoAddress, origen, destino) {
+  const newId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+  
+  const newOrder = {
+    id: newId,
+    cliente,
+    origen,
+    destino,
+    origenAddress,
+    destinoAddress,
+    estado: "Pendiente",
+    repartidor: null
+  };
+
+  orders.push(newOrder);
+  return newOrder;
 }
