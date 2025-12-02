@@ -44,14 +44,21 @@ export default function LoginPage() {
         JSON.stringify({
           id: user._id,
           email: user.email,
+          name: user.name,
           role: user.role,
           token: token,
         })
       );
 
       // Redirección según rol
-      if (user.role === "admin") router.replace("/admin");
-      else router.replace("/dashboard");
+      if (user.role === "admin") {
+        router.replace("/admin");
+      } else if (user.role === "repartidor") {
+        router.replace("/dashboard");
+      } else {
+        // usuario normal (role === "user" o por defecto)
+        router.replace("/user");
+      }
 
     } catch (err) {
       setError(err.message);

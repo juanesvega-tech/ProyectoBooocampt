@@ -1,13 +1,36 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Truck, MapPin, User } from "lucide-react";
 
 export default function AssignForm({ order, onSubmit }) {
   const [repartidor, setRepartidor] = useState("");
-  const [lugarEntrega, setLugarEntrega] = useState("");
+  const [lugarEntrega, setLugarEntrega] = useState(order.destinoAddress || "");
+  const [repartidores, setRepartidores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchRepartidores();
+  }, []);
+
+  async function fetchRepartidores() {
+    try {
+      const response = await fetch("http://localhost:4000/api/users/repartidores");
+      if (!response.ok) throw new Error("Error al obtener repartidores");
+      const data = await response.json();
+      setRepartidores(data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching repartidores:", err);
+      setError("No se pudieron cargar los repartidores");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
+    console.log("Enviando:", { repartidor, lugarEntrega }); // Debug
     onSubmit(repartidor, lugarEntrega);
   }
 
@@ -26,21 +49,38 @@ export default function AssignForm({ order, onSubmit }) {
         />
       </div>
 
-      {/* Repartidor */}
+      {/* Repartidor - Select */}
       <div>
         <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
           <Truck className="w-4 h-4" /> Repartidor asignado
         </label>
-        <input
-          type="text"
-          placeholder="Ej: Juan Pérez"
-          required
-          value={repartidor}
-          onChange={(e) => setRepartidor(e.target.value)}
-          className="w-full p-2.5 border border-gray-300 dark:border-gray-600 
-                     bg-white dark:bg-gray-800 rounded-lg
-                     text-gray-900 dark:text-white"
-        />
+        {loading ? (
+          <div className="w-full p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300">
+            Cargando repartidores...
+          </div>
+        ) : error ? (
+          <div className="w-full p-2.5 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        ) : (
+          <select
+            required
+            value={repartidor}
+            onChange={(e) => setRepartidor(e.target.value)}
+            className="w-full p-2.5 border border-gray-300 dark:border-gray-600 
+                       bg-white dark:bg-gray-800 rounded-lg
+                       text-gray-900 dark:text-white
+                       focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                       transition-all"
+          >
+            <option value="">-- Selecciona un repartidor --</option>
+            {repartidores.map((rep) => (
+              <option key={rep._id} value={rep.name}>
+                {rep.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Lugar de entrega */}
@@ -50,20 +90,17 @@ export default function AssignForm({ order, onSubmit }) {
         </label>
         <input
           type="text"
-          placeholder="Ej: Calle 123, Zona Centro"
-          required
+          disabled
           value={lugarEntrega}
-          onChange={(e) => setLugarEntrega(e.target.value)}
-          className="w-full p-2.5 border border-gray-300 dark:border-gray-600 
-                     bg-white dark:bg-gray-800 rounded-lg
-                     text-gray-900 dark:text-white"
+          className="w-full p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"
         />
       </div>
 
       {/* Botón */}
       <button
         type="submit"
-        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 
+        disabled={loading || !repartidor}
+        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400
                    text-white rounded-lg shadow transition-all"
       >
         Confirmar asignación

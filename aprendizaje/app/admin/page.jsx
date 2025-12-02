@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import * as ordersAPI from "../api/orders";
 import { Package, User, Clock, CheckCircle, Truck, ChevronRight } from "lucide-react";
 import StatusBadge from "../ui/StatusBadge";
 import Modal from "../ui/Modal";
@@ -10,21 +9,52 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setOrders([...ordersAPI.getOrders()]);
+    fetchOrders();
   }, []);
+
+  async function fetchOrders() {
+    try {
+      const response = await fetch("http://localhost:4000/api/orders");
+      if (!response.ok) throw new Error("Error al obtener órdenes");
+      const data = await response.json();
+      setOrders(data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function openAssignModal(order) {
     setSelectedOrder(order);
     setModalOpen(true);
   }
 
-  function handleAssign(repartidor, lugarEntrega) {
-    ordersAPI.assignOrder(selectedOrder.id, repartidor, lugarEntrega);
+  async function handleAssign(repartidor, lugarEntrega) {
+    console.log("handleAssign recibido:", { repartidor, lugarEntrega }); // Debug
+    try {
+      const response = await fetch("http://localhost:4000/api/orders/assign", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: selectedOrder._id,
+          repartidor,
+          lugarEntrega,
+        }),
+      });
 
-    setOrders([...ordersAPI.getOrders()]);
-    setModalOpen(false);
+      if (!response.ok) throw new Error("Error al asignar orden");
+
+      await fetchOrders();
+      setModalOpen(false);
+    } catch (error) {
+      console.error("Error assigning order:", error);
+    }
   }
 
   function handleLogout() {
@@ -112,7 +142,12 @@ export default function AdminPage() {
 
         {/* Orders List */}
         <div className="space-y-3">
-          {orders.length === 0 ? (
+          {loading ? (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
+              <Package className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3 animate-pulse" />
+              <p className="text-gray-500 dark:text-gray-400">Cargando pedidos...</p>
+            </div>
+          ) : orders.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
               <Package className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">No hay pedidos disponibles</p>
@@ -120,7 +155,7 @@ export default function AdminPage() {
           ) : (
             orders.map(order => (
               <div
-                key={order.id}
+                key={order._id}
                 className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
                            rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900 
                            transition-all duration-200"

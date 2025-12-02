@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRoute from "./api/users/routes/userRoute.js";
+import orderRoute from "./api/orders/routes/orderRoute.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Rutas
 app.use("/api/users", userRoute);
+app.use("/api/orders", orderRoute);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

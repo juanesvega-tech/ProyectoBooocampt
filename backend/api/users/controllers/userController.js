@@ -98,3 +98,13 @@ export const getUsers = async (req, res) => {
   }
 };
 
+export const getRepartidores = async (req, res) => {
+  try {
+    const repartidores = await User.find({ role: "repartidor" }).select("_id name email");
+    res.json(repartidores);
+  } catch (error) {
+    console.error('Error al obtener repartidores:', error);
+    res.status(500).json({ msg: "Error al obtener repartidores", error: error.message || error });
+  }
+};
+

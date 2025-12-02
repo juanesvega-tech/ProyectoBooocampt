@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getUsers  } from "../controllers/userController.js";
+import { register, login, getUsers, getRepartidores  } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -9,6 +9,7 @@ router.post("/login", login);   // 👈 AQUÍ ESTÁ LA RUTA /login
 
 // Rutas protegidas (opcional)
 router.get("/", getUsers);
+router.get("/repartidores", getRepartidores);
 
 
 export default router;
