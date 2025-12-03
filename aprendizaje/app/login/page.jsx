@@ -137,18 +137,7 @@ export default function LoginPage() {
             </button>
 
             <div className="flex gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("user@example.com");
-                  setPassword("password123");
-                  setError("");
-                }}
-                className="inline-flex items-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                Usar credenciales de ejemplo
-              </button>
-
+          
               <button
                 type="button"
                 onClick={handleRecuperarClick}
