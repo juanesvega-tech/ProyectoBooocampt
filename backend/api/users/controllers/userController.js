@@ -108,3 +108,33 @@ export const getRepartidores = async (req, res) => {
   }
 };
 
+export const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, role, password } = req.body || {};
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ msg: "Usuario no encontrado" });
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (role) user.role = role;
+    if (password) user.password = await bcrypt.hash(password, 10);
+    await user.save();
+    const userToReturn = user.toObject ? user.toObject() : { ...user };
+    delete userToReturn.password;
+    res.json(userToReturn);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar usuario", error: error.message || error });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const deleted = await User.findByIdAndDelete(userId);
+    if (!deleted) return res.status(404).json({ msg: "Usuario no encontrado" });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ msg: "Error al eliminar usuario", error: error.message || error });
+  }
+};
+

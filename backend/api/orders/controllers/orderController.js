@@ -38,17 +38,17 @@ export const getOrders = async (req, res) => {
 
 export const assignOrder = async (req, res) => {
   try {
-    const { orderId, repartidor, lugarEntrega } = req.body;
+    const { orderId, repartidor, origenAddress } = req.body;
 
-    console.log("Asignando orden:", { orderId, repartidor, lugarEntrega }); // Debug
+    console.log("Asignando orden:", { orderId, repartidor, origenAddress });
 
-    if (!orderId || !repartidor || !lugarEntrega) {
+    if (!orderId || !repartidor || !origenAddress) {
       return res.status(400).json({ msg: "Faltan campos requeridos" });
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
-      { estado: "En camino", repartidor, lugarEntrega },
+      { estado: "En camino", repartidor, origenAddress },
       { new: true }
     );
 
@@ -87,5 +87,19 @@ export const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error("Error en updateOrderStatus:", error);
     res.status(500).json({ msg: "Error al actualizar orden", error: error.message });
+  }
+};
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const deleted = await Order.findByIdAndDelete(orderId);
+    if (!deleted) {
+      return res.status(404).json({ msg: "Orden no encontrada" });
+    }
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error en deleteOrder:", error);
+    res.status(500).json({ msg: "Error al eliminar orden", error: error.message });
   }
 };

@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Package, User, Clock, CheckCircle, Truck, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import StatusBadge from "../ui/StatusBadge";
 import Modal from "../ui/Modal";
 import AssignForm from "../ui/AssignForm";
 
 export default function AdminPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -28,13 +30,14 @@ export default function AdminPage() {
     }
   }
 
+
   function openAssignModal(order) {
     setSelectedOrder(order);
     setModalOpen(true);
   }
 
-  async function handleAssign(repartidor, lugarEntrega) {
-    console.log("handleAssign recibido:", { repartidor, lugarEntrega }); // Debug
+  async function handleAssign(repartidor, origenAddress) {
+    console.log("handleAssign recibido:", { repartidor, origenAddress }); // Debug
     try {
       const response = await fetch("http://localhost:4000/api/orders/assign", {
         method: "PUT",
@@ -44,7 +47,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           orderId: selectedOrder._id,
           repartidor,
-          lugarEntrega,
+          origenAddress,
         }),
       });
 
@@ -56,6 +59,19 @@ export default function AdminPage() {
       console.error("Error assigning order:", error);
     }
   }
+
+  async function handleDelete(orderId) {
+    const ok = window.confirm("¿Eliminar este pedido?");
+    if (!ok) return;
+    try {
+      const res = await fetch(`http://localhost:4000/api/orders/${orderId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) throw new Error("Error al eliminar");
+      await fetchOrders();
+    } catch (err) {
+      console.error("Error deleting order:", err);
+    }
+  }
+
 
   function handleLogout() {
   // EJEMPLO: limpiar datos de sesión
@@ -91,17 +107,26 @@ export default function AdminPage() {
           </div>
 
           {/* BOTÓN DE CERRAR SESIÓN */}
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-xl text-sm font-medium 
-               bg-red-600 hover:bg-red-700 active:bg-red-800 
-               text-white shadow-sm hover:shadow transition-all"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/admin/users")}
+              className="px-4 py-2 rounded-xl text-sm font-medium 
+                 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 
+                 text-gray-800 dark:text-gray-100 shadow-sm hover:shadow transition-all"
+            >
+              Ver usuarios
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-xl text-sm font-medium 
+                 bg-red-600 hover:bg-red-700 active:bg-red-800 
+                 text-white shadow-sm hover:shadow transition-all"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between">
@@ -184,18 +209,40 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {order.estado === "Pendiente" && (
+                    <div className="flex items-center gap-3">
+                      {order.estado === "Pendiente" && (
+                        <button
+                          onClick={() => openAssignModal(order)}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 
+                                     bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                                     text-white rounded-xl shadow-sm hover:shadow 
+                                     transition-all duration-200 group/btn"
+                        >
+                          <span>Asignar</span>
+                          <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                        </button>
+                      )}
+                      {order.estado !== "Entregado" && (
+                        <button
+                          onClick={() => openAssignModal(order)}
+                          className="inline-flex items-center justify-center px-4 py-2.5 
+                                     bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                                     text-white rounded-xl shadow-sm hover:shadow 
+                                     transition-all"
+                        >
+                          Editar origen
+                        </button>
+                      )}
                       <button
-                        onClick={() => openAssignModal(order)}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 
-                                   bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                        onClick={() => handleDelete(order._id)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 
+                                   bg-red-600 hover:bg-red-700 active:bg-red-800
                                    text-white rounded-xl shadow-sm hover:shadow 
-                                   transition-all duration-200 group/btn"
+                                   transition-all"
                       >
-                        <span>Asignar a repartidor</span>
-                        <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                        Eliminar
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>

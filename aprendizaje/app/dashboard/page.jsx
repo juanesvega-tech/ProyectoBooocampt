@@ -12,6 +12,60 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [repartidorName, setRepartidorName] = useState("");
 
+  async function reverseGeocodeCO(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&addressdetails=1&countrycodes=co`;
+    const res = await fetch(url);
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data?.display_name || "";
+  }
+
+  async function searchGeocodeCO(query) {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&countrycodes=co&addressdetails=1`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+    return null;
+  }
+
+  async function resolveOrders(orders) {
+    const results = await Promise.all(
+      orders.map(async (o) => {
+        let origenAddressResolved = o.origenAddress;
+        let destinoAddressResolved = o.destinoAddress;
+        let origenResolved = o.origen;
+        let destinoResolved = o.destino;
+
+        if (!origenAddressResolved && o.origen?.lat && o.origen?.lng) {
+          origenAddressResolved = await reverseGeocodeCO(o.origen.lat, o.origen.lng);
+        }
+        if (!destinoAddressResolved && o.destino?.lat && o.destino?.lng) {
+          destinoAddressResolved = await reverseGeocodeCO(o.destino.lat, o.destino.lng);
+        }
+        if (o.origenAddress) {
+          const coords = await searchGeocodeCO(o.origenAddress);
+          if (coords) origenResolved = coords;
+        }
+        if (o.destinoAddress) {
+          const coords = await searchGeocodeCO(o.destinoAddress);
+          if (coords) destinoResolved = coords;
+        }
+
+        return {
+          ...o,
+          origenAddressResolved,
+          destinoAddressResolved,
+          origenResolved,
+          destinoResolved,
+        };
+      })
+    );
+    return results;
+  }
+
   useEffect(() => {
     fetchOrders();
     // Obtener nombre del repartidor desde localStorage
@@ -36,7 +90,8 @@ export default function DashboardPage() {
       });
       
       console.log("Órdenes filtradas:", filtered); // Debug
-      setOrders(filtered);
+      const enriched = await resolveOrders(filtered);
+      setOrders(enriched);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -109,7 +164,7 @@ export default function DashboardPage() {
                       <MapPin className="w-4 h-4 mt-0.5 text-green-600 dark:text-green-400 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tu ubicación (Origen)</p>
-                        <p className="text-gray-900 dark:text-white">{order.origenAddress}</p>
+                        <p className="text-gray-900 dark:text-white">{order.origenAddress || order.origenAddressResolved}</p>
                       </div>
                     </div>
 
@@ -117,17 +172,17 @@ export default function DashboardPage() {
                       <MapPin className="w-4 h-4 mt-0.5 text-red-600 dark:text-red-400 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Lugar de entrega (Destino)</p>
-                        <p className="text-gray-900 dark:text-white">{order.destinoAddress}</p>
+                        <p className="text-gray-900 dark:text-white">{order.destinoAddress || order.destinoAddressResolved}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Mapa con ruta */}
-                {order.origen && order.destino && (
+                {(order.origenResolved || order.origen) && (order.destinoResolved || order.destino) && (
                   <div className="mt-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="h-80">
-                      <MapRoute origen={order.origen} destino={order.destino} />
+                      <MapRoute origen={order.origenResolved || order.origen} destino={order.destinoResolved || order.destino} />
                     </div>
                     <div className="p-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
                       <p className="text-xs text-gray-600 dark:text-gray-400">

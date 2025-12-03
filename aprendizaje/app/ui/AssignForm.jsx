@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { Truck, MapPin, User } from "lucide-react";
 
 export default function AssignForm({ order, onSubmit }) {
-  const [repartidor, setRepartidor] = useState("");
-  const [lugarEntrega, setLugarEntrega] = useState(order.destinoAddress || "");
+  const [repartidor, setRepartidor] = useState(order.repartidor || "");
+  const [origenAddress, setOrigenAddress] = useState(order.origenAddress || "");
   const [repartidores, setRepartidores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,8 +30,7 @@ export default function AssignForm({ order, onSubmit }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    console.log("Enviando:", { repartidor, lugarEntrega }); // Debug
-    onSubmit(repartidor, lugarEntrega);
+    onSubmit(repartidor, origenAddress);
   }
 
   return (
@@ -83,16 +82,17 @@ export default function AssignForm({ order, onSubmit }) {
         )}
       </div>
 
-      {/* Lugar de entrega */}
+      {/* Dirección de origen */}
       <div>
         <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
-          <MapPin className="w-4 h-4" /> Lugar de entrega
+          <MapPin className="w-4 h-4" /> Dirección de origen
         </label>
         <input
           type="text"
-          disabled
-          value={lugarEntrega}
-          className="w-full p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"
+          value={origenAddress}
+          onChange={(e) => setOrigenAddress(e.target.value)}
+          placeholder="Calle 123 #45-67, Ciudad, Colombia"
+          className="w-full p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-white"
         />
       </div>
 
