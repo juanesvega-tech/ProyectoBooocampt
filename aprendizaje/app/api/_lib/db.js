@@ -10,7 +10,7 @@ export async function connectDB() {
   if (!cached.promise) {
     const uri = process.env.MONGO_URI;
     if (!uri) throw new Error("MONGO_URI no está definido");
-    cached.promise = mongoose.connect(uri, { dbName: uri.split("/").pop()?.split("?")[0] });
+    cached.promise = mongoose.connect(uri);
   }
   cached.conn = await cached.promise;
   return cached.conn;
