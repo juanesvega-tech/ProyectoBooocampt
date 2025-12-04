@@ -52,7 +52,7 @@ export default function UserPage() {
         lng: -58.38 + Math.random() * 0.1,
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/orders`, {
+      const response = await fetch(`/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

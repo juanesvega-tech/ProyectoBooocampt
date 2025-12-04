@@ -12,7 +12,7 @@ export default function AdminPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+  const API_BASE_URL = "";
 
   useEffect(() => {
     fetchOrders();
@@ -20,7 +20,7 @@ export default function AdminPage() {
 
   async function fetchOrders() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders`);
+      const response = await fetch(`/api/orders`);
       if (!response.ok) throw new Error("Error al obtener órdenes");
       const data = await response.json();
       setOrders(data);
@@ -40,7 +40,7 @@ export default function AdminPage() {
   async function handleAssign(repartidor, origenAddress) {
     console.log("handleAssign recibido:", { repartidor, origenAddress }); // Debug
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/assign`, {
+      const response = await fetch(`/api/orders/assign`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export default function AdminPage() {
     const ok = window.confirm("¿Eliminar este pedido?");
     if (!ok) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, { method: "DELETE" });
+      const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) throw new Error("Error al eliminar");
       await fetchOrders();
     } catch (err) {
