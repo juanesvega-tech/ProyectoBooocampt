@@ -56,7 +56,6 @@ export default function LoginPage() {
       } else if (user.role === "repartidor") {
         router.replace("/dashboard");
       } else {
-        // usuario normal (role === "user" o por defecto)
         router.replace("/user");
       }
 
