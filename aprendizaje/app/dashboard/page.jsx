@@ -75,7 +75,7 @@ export default function DashboardPage() {
 
   async function fetchOrders() {
     try {
-      const response = await fetch("http://localhost:4000/api/orders");
+      const response = await fetch("/api/orders");
       if (!response.ok) throw new Error("Error al obtener órdenes");
       const data = await response.json();
       

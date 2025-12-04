@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   // 🔥 Nueva función: login real al backend
   async function loginToBackend(email, password) {
-    const res = await fetch("http://localhost:4000/api/users/login", {
+    const res = await fetch("/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

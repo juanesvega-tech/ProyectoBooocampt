@@ -21,7 +21,6 @@ export default function UserPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
   const handleLogout = () => {
     localStorage.removeItem("auth");
