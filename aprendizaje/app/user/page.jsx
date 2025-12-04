@@ -21,6 +21,7 @@ export default function UserPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
   const handleLogout = () => {
     localStorage.removeItem("auth");
@@ -51,7 +52,7 @@ export default function UserPage() {
         lng: -58.38 + Math.random() * 0.1,
       };
 
-      const response = await fetch("http://localhost:4000/api/orders", {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

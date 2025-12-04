@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Truck, MapPin, User } from "lucide-react";
 
 export default function AssignForm({ order, onSubmit }) {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
   const [repartidor, setRepartidor] = useState(order.repartidor || "");
   const [origenAddress, setOrigenAddress] = useState(order.origenAddress || "");
   const [repartidores, setRepartidores] = useState([]);
@@ -15,7 +16,7 @@ export default function AssignForm({ order, onSubmit }) {
 
   async function fetchRepartidores() {
     try {
-      const response = await fetch("http://localhost:4000/api/users/repartidores");
+      const response = await fetch(`${API_BASE_URL}/api/users/repartidores`);
       if (!response.ok) throw new Error("Error al obtener repartidores");
       const data = await response.json();
       setRepartidores(data);

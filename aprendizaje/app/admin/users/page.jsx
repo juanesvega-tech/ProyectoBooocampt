@@ -14,6 +14,7 @@ export default function AdminUsersPage() {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
   useEffect(() => {
     fetchUsers();
@@ -21,7 +22,7 @@ export default function AdminUsersPage() {
 
   async function fetchUsers() {
     try {
-      const res = await fetch("http://localhost:4000/api/users");
+      const res = await fetch(`${API_BASE_URL}/api/users`);
       if (!res.ok) throw new Error("Error usuarios");
       const data = await res.json();
       setUsers(data);
@@ -34,7 +35,7 @@ export default function AdminUsersPage() {
   async function handleCreate(e) {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:4000/api/users/register", {
+      const res = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
@@ -47,7 +48,7 @@ export default function AdminUsersPage() {
 
   async function handleRoleChange(id, newRole) {
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole }),
@@ -61,7 +62,7 @@ export default function AdminUsersPage() {
     const ok = window.confirm("¿Eliminar este usuario?");
     if (!ok) return;
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE_URL}/api/users/${id}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) throw new Error("Error eliminar");
       await fetchUsers();
     } catch (e) {}
@@ -82,7 +83,7 @@ export default function AdminUsersPage() {
   async function saveEdit() {
     if (!editingId) return;
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${editingId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editName, email: editEmail }),
